@@ -9,7 +9,7 @@ exports.chatUser = async (req, res) => {
 
     try {
         console.log("im here");
-        const response = await axios.post('https://lit-g585tloe4-aditi-pandeys-projects-d69203c4.vercel.app/', { prompt });
+        const response = await axios.post('http://localhost:8000/submit', { prompt });
         console.log(response);
         return res.status(200).json({ text: response.data });
     } catch (error) {
