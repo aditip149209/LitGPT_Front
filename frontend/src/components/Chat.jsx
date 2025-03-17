@@ -3,43 +3,75 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const Chat = () => {
-    const [output, setOutput] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [input, setInput] = useState('');
+    const [messages, setMessages] = useState([]);
     const navigate = useNavigate();
 
-    const handleGenerate = async () => {
-        setLoading(true);
+    const handleSend = async () => {
+        if (!input.trim()) return;
+
+        // Add user message to state
+        const newMessages = [...messages, { sender: 'user', text: input }];
+        setMessages(newMessages);
+
         try {
-            const response = await axios.post('http://localhost:5000/api/litgptchat');
-            setOutput(response.data.output);
+            // Send the prompt to the backend
+            const response = await axios.post('http://localhost:5000/api/litgptchat', { prompt: input });
+
+            // Add AI response to state
+            setMessages([...newMessages, { sender: 'ai', text: response.data.text }]);
         } catch (error) {
-            console.error('Error generating output:', error);
-            setOutput('Failed to generate output.');
+            console.error('Error sending message:', error);
+            setMessages([...newMessages, { sender: 'ai', text: 'Failed to get a response from the model.' }]);
         }
-        setLoading(false);
+
+        // Clear input field
+        setInput('');
     };
 
-    const handleBack = (e) => {
-        e.preventDefault();
-        navigate('/')
+    
+    const handleBack = () => {
+        navigate('/');
     }
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
-            <h1 className="text-2xl font-bold mb-4">LitGPT Output</h1>
-            <button
-                onClick={handleGenerate}
-                className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-6 rounded transition duration-200"
-                disabled={loading}
-            >
-                {loading ? 'Generating...' : 'Generate'}
-            </button>
-            <div className="mt-6 w-full max-w-2xl bg-gray-800 p-4 rounded shadow-md">
-                {output ? <p className="whitespace-pre-wrap">{output}</p> : <p>No output yet...</p>}
+        <div className="flex flex-col h-screen bg-gray-900 text-white">
+            {/* Header */}
+            <div className='relative flex items-center p-4 bg-gray-800'>
+            <button onClick = {handleBack} className='bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition duration-200 mr-4'>Back</button>
+            <div className="p-4 bg-gray-800 text-lg font-bold absolute left-1/2 transform -translate-x-1/2">
+                LitGPT Chat
             </div>
-            <button onClick = {handleBack} className='bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-6 rounded transition duration-200 mt-6'>
-                Back
-            </button>
+            </div>
+
+            {/* Chat Window */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {messages.map((msg, index) => (
+                    <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`px-4 py-2 rounded-lg max-w-xs ${msg.sender === 'user' ? 'bg-purple-600' : 'bg-gray-700'}`}>
+                            {msg.text}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Input Box */}
+            <div className="p-4 bg-gray-800 flex">
+                <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1 px-4 py-2 bg-gray-700 rounded-l-lg focus:outline-none"
+                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                />
+                <button
+                    onClick={handleSend}
+                    className="bg-purple-600 px-6 py-2 rounded-r-lg font-semibold hover:bg-purple-500 transition"
+                >
+                    Send
+                </button>
+            </div>
         </div>
     );
 };

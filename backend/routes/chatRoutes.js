@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const chatUser = require()
+const {chatUser} = require('../controllers/chatUser')
 
-router.use('/litgptchat', chatUser);
+router.post('/litgptchat', chatUser);
 
 module.exports = router;
